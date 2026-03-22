@@ -1,1 +1,2 @@
-web: python ooredoo_fb.py
+web: gunicorn ooredoofcb:app
+
