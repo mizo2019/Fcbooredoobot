@@ -1447,8 +1447,11 @@ def webhook():
 # ============================================================
 # --- MAIN ---
 # ============================================================
+# Add this line ↓ (runs with both Flask and Gunicorn)
+os.makedirs('/app/data', exist_ok=True)
+init_db()
+
 if __name__ == '__main__':
-    init_db()
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get('PORT', 5000))
     print(f"Ooredoo FB Bot running on port {port}...")
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)
