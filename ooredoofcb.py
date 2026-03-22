@@ -724,7 +724,7 @@ def show_dashboard(sender_id):
     text += gift_msg + "\n\n"
     text += "اختر رقماً:\n"
     for i, act in enumerate(actions, 1):
-        text += f"{i}. {action_labels[act]}\n"
+        text += f"{action_labels[act]} .{i}\n"
 
     user_states[sender_id] = {"st": "dashboard", "actions": actions}
     send_message(sender_id, text)
@@ -802,19 +802,19 @@ def show_offers(sender_id, category=None):
     if monthly:
         text += "\n-- عروض شهرية --\n"
         for key, offer in monthly:
-            text += f"{i}. {offer['title']} - {offer['price']}\n"
+            text += f"{offer['title']} - {offer['price']} .{i}\n"
             offer_keys.append(key)
             i += 1
 
     if weekly:
         text += "\n-- عروض اسبوعية --\n"
         for key, offer in weekly:
-            text += f"{i}. {offer['title']} - {offer['price']}\n"
+            text += f"{offer['title']} - {offer['price']} .{i}\n"
             offer_keys.append(key)
             i += 1
 
     back_idx = i
-    text += f"\n{i}. رجوع\n"
+    text += f"\nرجوع .{i}\n"
 
     user_states[sender_id] = {
         "st":         "offers_list",
@@ -832,8 +832,8 @@ def show_offer_confirm(sender_id, offer_key):
     text = (
         f"========== تفاصيل العرض ==========\n\n"
         f"{offer['description']}\n\n"
-        f"1. نعم، فعّل العرض\n"
-        f"2. الغاء\n"
+        f"نعم، فعّل العرض .1\n"
+        f"الغاء .2\n"
     )
     user_states[sender_id] = {"st": "offer_confirm", "offer_key": offer_key}
     send_message(sender_id, text)
@@ -981,7 +981,7 @@ def show_admin_panel(sender_id):
     text = "========== لوحة الادارة ==========\n\n"
     i = 1
 
-    text += f"{i}. المستخدمون\n"
+    text += f"المستخدمون .{i}\n"
     actions.append({"type": "users_list"})
     i += 1
 
@@ -990,17 +990,17 @@ def show_admin_panel(sender_id):
         for num_id, phone, label, plan, last_updated, access_token in managed:
             display = label or phone
             dot     = "[مسجل]" if access_token else "[غير مسجل]"
-            text += f"{i}. {dot} {display}\n"
+            text += f"{dot} {display} .{i}\n"
             actions.append({"type": "admin_num", "num_id": num_id})
             i += 1
 
-    text += f"\n{i}. اضافة رقم جديد\n"
+    text += f"\nاضافة رقم جديد .{i}\n"
     actions.append({"type": "add"})
     i += 1
-    text += f"{i}. احصائيات\n"
+    text += f"احصائيات .{i}\n"
     actions.append({"type": "stats"})
     i += 1
-    text += f"{i}. تحديث\n"
+    text += f"تحديث .{i}\n"
     actions.append({"type": "refresh"})
 
     user_states[sender_id] = {"st": "admin_panel", "actions": actions}
@@ -1017,13 +1017,13 @@ def show_admin_users_list(sender_id):
         for chat_id, phone, full_name, username, plan, last_updated, access_token in users:
             name = full_name or phone or "بدون اسم"
             dot  = "[مسجل]" if access_token else "[غير مسجل]"
-            text += f"{i}. {dot} {name}\n"
+            text += f"{dot} {name} .{i}\n"
             actions.append({"type": "user", "target_id": chat_id})
             i += 1
     else:
         text += "لا يوجد مستخدمون مسجلون.\n"
 
-    text += f"\n{i}. رجوع\n"
+    text += f"\nرجوع .{i}\n"
     actions.append({"type": "back_admin"})
 
     user_states[sender_id] = {"st": "admin_users_list", "actions": actions}
@@ -1049,13 +1049,13 @@ def show_admin_user_detail(sender_id, target_id):
     actions = []
     i = 1
     if u['access_token']:
-        text += f"{i}. دخول بالتوكن المحفوظ\n"
+        text += f"دخول بالتوكن المحفوظ .{i}\n"
         actions.append({"type": "login_user", "target_id": target_id})
         i += 1
-    text += f"{i}. حذف المستخدم\n"
+    text += f"حذف المستخدم .{i}\n"
     actions.append({"type": "delete_user", "target_id": target_id})
     i += 1
-    text += f"{i}. رجوع\n"
+    text += f"رجوع .{i}\n"
     actions.append({"type": "back_admin"})
 
     user_states[sender_id] = {"st": "admin_user_detail", "actions": actions}
@@ -1080,13 +1080,13 @@ def show_admin_num_detail(sender_id, num_id):
     actions = []
     i = 1
     if n['access_token']:
-        text += f"{i}. دخول بالتوكن المحفوظ\n"
+        text += f"دخول بالتوكن المحفوظ .{i}\n"
         actions.append({"type": "login_num", "num_id": num_id})
         i += 1
-    text += f"{i}. حذف\n"
+    text += f"حذف .{i}\n"
     actions.append({"type": "delete_num", "num_id": num_id})
     i += 1
-    text += f"{i}. رجوع\n"
+    text += f"رجوع .{i}\n"
     actions.append({"type": "back_admin"})
 
     user_states[sender_id] = {"st": "admin_num_detail", "actions": actions}
