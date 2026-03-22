@@ -20,7 +20,7 @@ app = Flask(__name__)
 # ============================================================
 PAGE_ACCESS_TOKEN = "EAAnOVdTFkTsBQ8iRqIatXrslyV4MShPZABDO2yDEgCG69TDpoPOQ7HFznqNp76Uyk5RoIflZCVfJqzCk5Y40h1OSHr4dK8P7eN0L8q0S0mqckPbis3DS62RDFoztXLDyWpTsKPDs3W92F26AxrTa3zkK6YcWtw7Nk5n4L6XkAUarSYwTYAh0KAGNKwXSnT2nudVZBD5FwZDZD"
 VERIFY_TOKEN      = "djezzybot"
-DB_NAME           = "bot_users.db"
+DB_NAME = '/app/data/botusers.db'
 
 # Facebook PSIDs (strings) of admins
 ADMIN_IDS = {"30671135982485176"}
