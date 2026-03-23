@@ -1258,10 +1258,17 @@ def handle_message(sender_id, text):
 
         res = verify_otp_request(ph, txt, sec["nonce"], sec["chronos"], device_uuid)
         if res["ok"]:
-            save_user_data(sender_id, ph, res["access"], res["refresh"], 3600)
-            user_states.pop(sender_id, None)
-            send_message(sender_id, "تم تسجيل الدخول بنجاح!")
-            show_dashboard(sender_id)
+    save_user_data(sender_id, ph, res["access"], res["refresh"], 3600)
+    
+    # Fetch and save name
+    name = get_user_profile(sender_id)
+    if name:
+        save_user_profile(sender_id, name, "")
+    
+    user_states.pop(sender_id, None)
+    send_message(sender_id, f"أهلاً {name}! ✅
+تم تسجيل الدخول بنجاح!")
+    show_dashboard(sender_id)
         else:
             send_message(sender_id, "الرمز غير صحيح اعد المحاولة ❌️")
         return
