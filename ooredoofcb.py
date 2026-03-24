@@ -778,6 +778,20 @@ def show_dashboard(sender_id):
 # --- OFFERS ---
 # ============================================================
 OFFERS = {
+    "offer_100go_100min": {
+        "title":    "100Go + 100min 📞",
+        "price":    "2000 DA",
+        "category": "monthly",
+        "description": "استفد من 100 جيغا و 100 دقيقة مكالمات صالحة لكل الشبكات مدة شهر كامل !",
+        "body": {
+            "validity": "Monthly",
+            "limitedBundleDetails": [
+                {"account": "data",   "allocation": 100},
+                {"account": "offnet", "allocation": 100}
+            ],
+            "unlimitedBundleDetails": []
+        }
+    },
     "offer_50min": {
         "title":    "50 دقيقة نحو كل الشبكات",
         "price":    "90 دج",
