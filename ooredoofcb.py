@@ -750,26 +750,24 @@ def show_dashboard(sender_id):
 
     # Build dynamic numbered action list
     action_labels = {
-        "claim_gift":  "احصل على الهدية الان",
-        "apply_snap":  "تفعيل سناب شات",
-        "offers_menu": "قائمة العروض",
-        "refresh":     "تحديث",
+        "claim_gift":  "🎁 احصل على الهدية الان",
+        "apply_snap":  "👻 تفعيل سناب شات",
+        "offers_menu": "📢 قائمة العروض",
     }
     actions = []
     if can_claim:      actions.append("claim_gift")
     if can_apply_snap: actions.append("apply_snap")
     actions.append("offers_menu")
-    actions.append("refresh")
 
-    text  = "========== لوحة التحكم ==========\n"
-    text += f"الخطة: {plan}\n"
-    if snap_msg: text += snap_msg
+    text  = "📱 ـ لوحة التحكم ـ 📱\n"
+    text += f"🔖 الخطة: {plan}\n"
+    if snap_msg: text += f"👻 {snap_msg}"
     text += "\n" + bal_msg + "\n"
-    text += "-" * 20 + "\n"
-    text += gift_msg + "\n\n"
-    text += "اختر رقماً:\n"
+    text += "─" * 20 + "\n"
+    text += "🎁 " + gift_msg + "\n\n"
+    text += "⬇️ اختر رقماً:\n"
     for i, act in enumerate(actions, 1):
-        text += f"{i}. {action_labels[act]}\n"
+        text += f"{action_labels[act]} .{i}\n"
 
     user_states[sender_id] = {"st": "dashboard", "actions": actions}
     send_message(sender_id, text)
@@ -936,8 +934,6 @@ def do_purchase(sender_id, offer_key):
     except Exception as e:
         send_message(sender_id, f"خطأ: {e}")
 
-    show_dashboard(sender_id)
-
 # ============================================================
 # --- CLAIM GIFT ---
 # ============================================================
@@ -996,8 +992,6 @@ def do_claim_gift(sender_id):
     except Exception as e:
         send_message(sender_id, f"خطأ: {e}")
 
-    show_dashboard(sender_id)
-
 # ============================================================
 # --- SNAPCHAT ---
 # ============================================================
@@ -1024,8 +1018,6 @@ def do_apply_snapchat(sender_id):
             send_message(sender_id, f"فشل تفعيل العرض ({r.status_code})")
     except Exception as e:
         send_message(sender_id, f"خطأ: {e}")
-
-    show_dashboard(sender_id)
 
 # ============================================================
 # --- ADMIN PANEL ---
@@ -1177,8 +1169,8 @@ def start_login(sender_id):
         get_or_create_device_info(sender_id)
         user_states[sender_id] = "phone"
         send_message(sender_id,
-            "مرحبا بك في بوت اوريدو!\n\n"
-            "ارسل رقم هاتفك للبدء (مثال: 0551234567):"
+            "مرحبا بك في بوت سجلني!\n\n"
+            "ارسل رقم هاتفك للبدء (مثال: 0557695868):"
         )
 
 # ============================================================
@@ -1335,7 +1327,6 @@ def handle_message(sender_id, text):
                 if act == "claim_gift":   do_claim_gift(sender_id)
                 elif act == "apply_snap": do_apply_snapchat(sender_id)
                 elif act == "offers_menu":show_offers(sender_id, "monthly")
-                elif act == "refresh":    show_dashboard(sender_id)
             else:
                 send_message(sender_id, "رقم غير صحيح، اختر من القائمة.")
                 show_dashboard(sender_id)
