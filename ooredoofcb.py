@@ -835,9 +835,24 @@ def show_dashboard(sender_id):
 # --- OFFERS ---
 # ============================================================
 OFFERS = {
+    "offer_60go_50min_10min": {
+        "title":    "1460DA = 60Go +50 min tout +10 min ooredoo 📞",
+        "price":    "",
+        "category": "monthly",
+        "description": "تحصل على 60 جيغا انترنت + 50 دقيقة نحو كل الشبكات + 10دقائق نحو اوريدو بسعر 1460 دج !!",
+        "body": {
+            "validity": "Monthly",
+            "limitedBundleDetails": [
+                {"account": "data",   "allocation": 60},
+                {"account": "onnet",  "allocation": 10},
+                {"account": "offnet", "allocation": 50}
+            ],
+            "unlimitedBundleDetails": []
+        }
+    },
     "offer_100go_100min": {
-        "title":    "100Go + 100min 📞",
-        "price":    "2000 DA",
+        "title":    "2000Da = 100Go + 100min 📞",
+        "price":    "",
         "category": "monthly",
         "description": "استفد من 100 جيغا و 100 دقيقة مكالمات صالحة لكل الشبكات مدة شهر كامل !",
         "body": {
@@ -918,14 +933,16 @@ def show_offers(sender_id, category=None):
     if monthly:
         text += "\n-- عروض شهرية --\n"
         for key, offer in monthly:
-            text += f"{i}. {offer['title']} - {offer['price']}\n"
+            price_part = f" - {offer['price']}" if offer['price'] else ""
+            text += f"{offer['title']}{price_part} .{i}\n"
             offer_keys.append(key)
             i += 1
 
     if weekly:
         text += "\n-- عروض اسبوعية --\n"
         for key, offer in weekly:
-            text += f"{i}. {offer['title']} - {offer['price']}\n"
+            price_part = f" - {offer['price']}" if offer['price'] else ""
+            text += f"{offer['title']}{price_part} .{i}\n"
             offer_keys.append(key)
             i += 1
 
