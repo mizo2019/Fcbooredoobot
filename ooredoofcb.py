@@ -1010,6 +1010,9 @@ def do_purchase(sender_id, offer_key):
     except Exception as e:
         send_message(sender_id, f"خطأ: {e}")
 
+    # Clear state so user isn't stuck in offer_confirm
+    user_states.pop(sender_id, None)
+
 # ============================================================
 # --- CLAIM GIFT ---
 # ============================================================
