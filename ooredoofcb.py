@@ -1058,11 +1058,15 @@ def do_claim_gift(sender_id):
                 else:            update_last_played(eid, data["playedTime"])
 
             clean = str(gift_name).strip().lower()
-            msg = "آسف😢، لم تحصل على شيء، جرب حظك غدا" \
+            msg = "آسف، لم تحصل على شيء، جرب حظك غدا" \
                   if clean in ["0mo", "0 mo", "0mb", "0 mb"] \
                   else f"🎉🎁 مبروك! حصلت على:\n\nالهدية: {gift_name}\nالصلاحية: {validity} ساعة 🎉"
             send_message(sender_id, msg)
             log_gift_claim(u['phone_number'], u.get('full_name') or '', gift_name, validity)
+            # Remove claim_gift from dashboard state so user can't trigger it again
+            state = user_states.get(sender_id)
+            if isinstance(state, dict) and "actions" in state:
+                state["actions"] = [a for a in state["actions"] if a != "claim_gift"]
         else:
             send_message(sender_id, f"خطأ اثناء الفتح ({r2.status_code})")
     except Exception as e:
@@ -1265,8 +1269,8 @@ def start_login(sender_id):
         get_or_create_device_info(sender_id)
         user_states[sender_id] = "phone"
         send_message(sender_id,
-            "مرحبا بك في بوت سجلني!\n\n"
-            "ارسل رقم هاتفك للبدء (مثال: 055056505):"
+            "مرحبا بك في بوت اوريدو!\n\n"
+            "ارسل رقم هاتفك للبدء (مثال: 0551234567):"
         )
 
 # ============================================================
