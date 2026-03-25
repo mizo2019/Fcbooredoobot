@@ -11,10 +11,15 @@ import datetime
 import uuid
 import base64
 import threading
+from threading import Thread
 from datetime import datetime as dt_class
 from flask import Flask, request as flask_request, jsonify
 
 app = Flask(__name__)
+
+# Deduplication
+processed_mids  = set()
+processed_lock  = threading.Lock()
 
 # Global lock — only one OTP request to Ooredoo at a time
 _otp_lock = threading.Lock()
@@ -134,6 +139,12 @@ def init_db():
         activated_at TEXT
     )''')
 
+    c.execute('''CREATE TABLE IF NOT EXISTS blocked_users (
+        chat_id TEXT PRIMARY KEY,
+        blocked_at TEXT,
+        reason TEXT
+    )''')
+
     conn.commit()
     conn.close()
 
@@ -195,6 +206,54 @@ def get_stats_counts():
     snaps = c.fetchone()[0]
     conn.close()
     return bundles, gifts, snaps
+
+# ============================================================
+# --- BLACKLIST ---
+# ============================================================
+BANNED_WORDS = [
+    "تعطي", "نكمك", "سوة", "فرخ", "تعطييي", "تعطيي", "تعطيييي",
+    "nikmkn", "nkmk", "تفو", "تفوو", "تفووه", "تفوه",
+    "قحبة", "عطاي", "كلب"
+]
+BLOCK_MSG = "يمنع استخدام هذه الألفاظ ، لقد تم حظرك ، لن تستطيع استخدام البوت بعد الآن ⛔️"
+
+def is_blocked(chat_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT chat_id FROM blocked_users WHERE chat_id=?", (chat_id,))
+    row = c.fetchone()
+    conn.close()
+    return row is not None
+
+def block_user(chat_id, reason="banned word"):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("INSERT OR IGNORE INTO blocked_users (chat_id, blocked_at, reason) VALUES (?,?,?)",
+              (chat_id, get_algeria_now().strftime("%Y-%m-%d %H:%M"), reason))
+    conn.commit()
+    conn.close()
+
+def unblock_user(chat_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM blocked_users WHERE chat_id=?", (chat_id,))
+    conn.commit()
+    conn.close()
+
+def get_all_blocked():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT chat_id, blocked_at, reason FROM blocked_users ORDER BY blocked_at DESC")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+def contains_banned_word(text):
+    lower = text.lower()
+    for word in BANNED_WORDS:
+        if word.lower() in lower:
+            return True
+    return False
 
 def get_or_create_device_info(chat_id):
     conn = sqlite3.connect(DB_NAME)
@@ -1051,6 +1110,9 @@ def show_admin_panel(sender_id):
     text += f"{i}. احصائيات\n"
     actions.append({"type": "stats"})
     i += 1
+    text += f"{i}. المحظورون\n"
+    actions.append({"type": "blocked"})
+    i += 1
     text += f"{i}. تحديث\n"
     actions.append({"type": "refresh"})
 
@@ -1156,6 +1218,23 @@ def show_admin_stats(sender_id):
     user_states[sender_id] = {"st": "admin_stats"}
     send_message(sender_id, "ارسل اي شيء للرجوع الى لوحة الادارة.")
 
+def show_blocked_list(sender_id):
+    rows    = get_all_blocked()
+    actions = []
+    text    = "========== المحظورون ==========\n\n"
+    i = 1
+    if rows:
+        for chat_id, blocked_at, reason in rows:
+            text += f"{i}. {chat_id}\n   {blocked_at} | {reason[:30]}\n"
+            actions.append({"type": "unblock", "target_id": chat_id})
+            i += 1
+    else:
+        text += "لا يوجد مستخدمون محظورون.\n"
+    text += f"\n{i}. رجوع\n"
+    actions.append({"type": "back_admin"})
+    user_states[sender_id] = {"st": "admin_blocked_list", "actions": actions}
+    send_message(sender_id, text)
+
 # ============================================================
 # --- LOGIN FLOW ---
 # ============================================================
@@ -1169,8 +1248,8 @@ def start_login(sender_id):
         get_or_create_device_info(sender_id)
         user_states[sender_id] = "phone"
         send_message(sender_id,
-            "مرحبا بك في بوت سجلني!\n\n"
-            "ارسل رقم هاتفك للبدء (مثال: 0557695868):"
+            "مرحبا بك في بوت اوريدو!\n\n"
+            "ارسل رقم هاتفك للبدء (مثال: 0551234567):"
         )
 
 # ============================================================
@@ -1179,6 +1258,17 @@ def start_login(sender_id):
 def handle_message(sender_id, text):
     txt   = text.strip()
     state = user_states.get(sender_id)
+
+    # ── Block check ───────────────────────────────────────────
+    if is_blocked(sender_id):
+        return  # silently ignore blocked users
+
+    # ── Banned word check ─────────────────────────────────────
+    if contains_banned_word(txt):
+        block_user(sender_id, reason=txt[:100])
+        logger.info("Blocked user %s for banned word in: %s", sender_id, txt)
+        send_message(sender_id, BLOCK_MSG)
+        return
 
     # ── Global commands ──────────────────────────────────────
     if txt.lower() in [
@@ -1382,7 +1472,28 @@ def handle_message(sender_id, text):
                     send_message(sender_id, "ارسل رقم الهاتف المراد اضافته (مثال: 0555123456)\nارسل 'الغاء' للإلغاء.")
                 elif act["type"] == "stats":
                     show_admin_stats(sender_id)
+                elif act["type"] == "blocked":
+                    show_blocked_list(sender_id)
                 elif act["type"] == "refresh":
+                    show_admin_panel(sender_id)
+            else:
+                send_message(sender_id, "رقم غير صحيح.")
+        except ValueError:
+            send_message(sender_id, "ارسل رقماً للاختيار.")
+        return
+
+    # ── Admin: blocked list ───────────────────────────────────
+    if isinstance(state, dict) and state.get("st") == "admin_blocked_list":
+        actions = state.get("actions", [])
+        try:
+            idx = int(txt) - 1
+            if 0 <= idx < len(actions):
+                act = actions[idx]
+                if act["type"] == "unblock":
+                    unblock_user(act["target_id"])
+                    send_message(sender_id, f"✅ تم رفع الحظر عن {act['target_id']}")
+                    show_blocked_list(sender_id)
+                elif act["type"] == "back_admin":
                     show_admin_panel(sender_id)
             else:
                 send_message(sender_id, "رقم غير صحيح.")
@@ -1472,23 +1583,56 @@ def verify_webhook():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    data = flask_request.get_json()
-    if data and data.get('object') == 'page':
-        for entry in data.get('entry', []):
-            for event in entry.get('messaging', []):
-                sender_id = event['sender']['id']
-                if event.get('message') and event['message'].get('text'):
-                    msg_text = event['message']['text']
-                    logger.info("MSG from %s: %s", sender_id, msg_text)
-                    fetch_fb_profile(sender_id)
-                    try:
-                        handle_message(sender_id, msg_text)
-                    except Exception as e:
-                        logger.exception("Error handling message from %s: %s", sender_id, e)
-                        try:
-                            send_message(sender_id, "حدث خطأ داخلي. حاول مجدداً او ارسل 'سجلني'.")
-                        except: pass
-    return jsonify({"status": "ok"}), 200
+    data = flask_request.get_json(silent=True)
+    if not data or data.get('object') != 'page':
+        return 'Not Found', 404
+    Thread(target=process_events, args=(data,), daemon=True).start()
+    return 'EVENT_RECEIVED', 200
+
+def handle_text_event(psid, message):
+    text = message.get('text', '').strip()
+    if not text:
+        return
+    fetch_fb_profile(psid)
+    try:
+        handle_message(psid, text)
+    except Exception as e:
+        logger.exception("Error handling message from %s: %s", psid, e)
+        try:
+            send_message(psid, "حدث خطأ داخلي. حاول مجدداً او ارسل 'سجلني'.")
+        except: pass
+
+def handle_action(psid, payload):
+    """Postback handler — treat payload as a text command."""
+    try:
+        handle_message(psid, payload)
+    except Exception as e:
+        logger.exception("Error handling postback from %s: %s", psid, e)
+
+def process_events(data):
+    for entry in data.get('entry', []):
+        for event in entry.get('messaging', []):
+            psid = event['sender']['id']
+
+            # ── Deduplication ──────────────────────────
+            mid = event.get('message', {}).get('mid') or \
+                  event.get('postback', {}).get('mid', '')
+            if mid:
+                with processed_lock:
+                    if mid in processed_mids:
+                        logger.info("[SKIP] Duplicate mid: %s", mid)
+                        continue
+                    processed_mids.add(mid)
+                    if len(processed_mids) > 2000:
+                        processed_mids.clear()
+            # ── End deduplication ──────────────────────
+
+            logger.info("MSG from %s: %s", psid, event.get('message', {}).get('text', '[postback]'))
+
+            if 'message' in event and not event['message'].get('is_echo'):
+                handle_text_event(psid, event['message'])
+            elif 'postback' in event:
+                handle_action(psid, event['postback']['payload'])
 
 # ============================================================
 # --- MAIN ---
