@@ -1436,10 +1436,8 @@ def handle_message(sender_id, text):
                 elif act == "offers_menu":show_offers(sender_id, "monthly")
             else:
                 send_message(sender_id, "رقم غير صحيح، اختر من القائمة.")
-                show_dashboard(sender_id)
         except ValueError:
             send_message(sender_id, "ارسل رقماً للاختيار من القائمة.")
-            show_dashboard(sender_id)
         return
 
     # ── Offers list ───────────────────────────────────────────
