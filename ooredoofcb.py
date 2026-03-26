@@ -1066,10 +1066,7 @@ def do_claim_gift(sender_id):
                   else f"🎉🎁 مبروك! حصلت على:\n\nالهدية: {gift_name}\nالصلاحية: {validity} ساعة 🎉"
             send_message(sender_id, msg)
             log_gift_claim(u['phone_number'], u.get('full_name') or '', gift_name, validity)
-            # Remove claim_gift from dashboard state so user can't trigger it again
-            state = user_states.get(sender_id)
-            if isinstance(state, dict) and "actions" in state:
-                state["actions"] = [a for a in state["actions"] if a != "claim_gift"]
+            user_states.pop(sender_id, None)
         else:
             send_message(sender_id, f"خطأ اثناء الفتح ({r2.status_code})")
     except Exception as e:
@@ -1101,6 +1098,8 @@ def do_apply_snapchat(sender_id):
             send_message(sender_id, f"فشل تفعيل العرض ({r.status_code})")
     except Exception as e:
         send_message(sender_id, f"خطأ: {e}")
+
+    user_states.pop(sender_id, None)
 
 # ============================================================
 # --- ADMIN PANEL ---
