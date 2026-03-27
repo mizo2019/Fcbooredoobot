@@ -501,8 +501,17 @@ def send_otp_request(phone, nonce, chronos, device_uuid):
                 r = requests.post(URL_OTP, headers=headers, data=data, timeout=15)
                 logger.info("SEND_OTP << status=%s body=%s", r.status_code, r.text[:300])
                 if is_waf_block(r):
-                    logger.warning("SEND_OTP WAF block, retrying in 3s...")
+                    logger.warning("SEND_OTP WAF block, getting fresh checkpoint before retry...")
                     time.sleep(3)
+                    cp = request_checkpoint(phone, device_uuid)
+                    if cp["ok"]:
+                        headers["X-Nonce-Id"]   = cp["nonce"]
+                        headers["X-Chronos-Id"] = cp["chronos"]
+                        nonce   = cp["nonce"]
+                        chronos = cp["chronos"]
+                        logger.info("SEND_OTP fresh checkpoint OK nonce=%s chronos=%s", nonce, chronos)
+                    else:
+                        logger.warning("SEND_OTP fresh checkpoint failed: %s", cp.get("err"))
                     continue
                 _last_otp_time = time.time()
                 if r.status_code == 403: return {"ok": True}
@@ -827,7 +836,7 @@ def show_dashboard(sender_id):
     actions.append("offers_menu")
 
     text  = "📱 ـ لوحة التحكم ـ 📱\n"
-    text += f"📞 {format_phone(u['phone_number'])}\n"
+    text += f"📞 {format_phone(u['phone_number'])}ن""
     text += f"🔖 الخطة: {plan}\n"
     if snap_msg: text += f"👻 {snap_msg}"
     text += "\n" + bal_msg + "\n"
