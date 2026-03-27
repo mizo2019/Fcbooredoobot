@@ -789,8 +789,6 @@ def format_phone(phone):
         return '---'
     if phone.startswith('213'):
         phone = '0' + phone[3:]
-    if len(phone) == 10:
-        return f"{phone[:4]} {phone[4:7]} {phone[7:]}"
     return phone
 
 def show_dashboard(sender_id):
