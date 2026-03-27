@@ -786,9 +786,9 @@ def get_active_user_data(sender_id):
 
 def format_phone(phone):
     if not phone:
-        return "---"
-    if phone.startswith("213"):
-        phone = "0" + phone[3:]
+        return '---'
+    if phone.startswith('213'):
+        phone = '0' + phone[3:]
     if len(phone) == 10:
         return f"{phone[:4]} {phone[4:7]} {phone[7:]}"
     return phone
@@ -829,6 +829,7 @@ def show_dashboard(sender_id):
     actions.append("offers_menu")
 
     text  = "📱 ـ لوحة التحكم ـ 📱\n"
+    text += f"📞 {format_phone(u['phone_number'])}\n"
     text += f"🔖 الخطة: {plan}\n"
     if snap_msg: text += f"👻 {snap_msg}"
     text += "\n" + bal_msg + "\n"
