@@ -213,7 +213,7 @@ def get_stats_counts():
 BANNED_WORDS = [
     "تعطي", "نكمك", "سوة", "فرخ", "تعطييي", "تعطيي", "تعطيييي",
     "nikmkn", "nkmk", "تفو", "تفوو", "تفووه", "تفوه",
-    "قحبة", "عطاي", "كلب" ,"نك" ,"نك مك" ,"نيك"
+    "قحبة", "عطاي", "كلب"
 ]
 BLOCK_MSG = "يمنع استخدام هذه الألفاظ ، لقد تم حظرك ، لن تستطيع استخدام البوت بعد الآن ⛔️"
 
@@ -783,6 +783,16 @@ def get_active_user_data(sender_id):
 # ============================================================
 # --- DASHBOARD ---
 # ============================================================
+
+def format_phone(phone):
+    if not phone:
+        return "---"
+    if phone.startswith("213"):
+        phone = "0" + phone[3:]
+    if len(phone) == 10:
+        return f"{phone[:4]} {phone[4:7]} {phone[7:]}"
+    return phone
+
 def show_dashboard(sender_id):
     u, eid, is_admin_num = get_active_user_data(sender_id)
     if not u or not u['access_token']:
