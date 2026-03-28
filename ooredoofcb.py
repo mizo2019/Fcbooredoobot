@@ -1317,7 +1317,7 @@ def handle_message(sender_id, text):
         "تشغيل", "ابدا", "ابدء", "سجلني", "تسجيل",
         "sejalni", "sejelni", "sajalni", "sajelni",
         "sejjelni", "sejjalni", "sajjelni", "sajjalni",
-        "مرحبًا 👋", "مرحبًا، sejjalni!"
+        "مرحبًا 👋", "مرحبًا، sejjalni!", "مرحبًا Sejjalni!"
     ]:
         start_login(sender_id)
         return
