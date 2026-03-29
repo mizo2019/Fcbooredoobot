@@ -213,7 +213,7 @@ def get_stats_counts():
 BANNED_WORDS = [
     "تعطي", "نكمك", "سوة", "فرخ", "تعطييي", "تعطيي", "تعطيييي",
     "nikmkn", "nkmk", "تفو", "تفوو", "تفووه", "تفوه",
-    "قحبة", "عطاي", "كلب", "ختك", "قود","نك" ,"نك مك"
+    "قحبة", "عطاي", "كلب", "نك", "نك مك", "زبي", "زب", "نمي", "zabi", "zbi" 
 ]
 BLOCK_MSG = "يمنع استخدام هذه الألفاظ ، لقد تم حظرك ، لن تستطيع استخدام البوت بعد الآن ⛔️"
 
@@ -249,9 +249,9 @@ def get_all_blocked():
     return rows
 
 def contains_banned_word(text):
-    lower = text.lower()
-    for word in BANNED_WORDS:
-        if word.lower() in lower:
+    words_in_msg = text.lower().split()
+    for banned in BANNED_WORDS:
+        if banned.lower() in words_in_msg:
             return True
     return False
 
@@ -1289,8 +1289,8 @@ def start_login(sender_id):
         get_or_create_device_info(sender_id)
         user_states[sender_id] = "phone"
         send_message(sender_id,
-            "مرحبا بك في بوت اوريدو!\n\n"
-            "ارسل رقم هاتفك للبدء (مثال: 0551234567):"
+            "مرحبا بك في بوت سجلني!\n\n"
+            "ارسل رقم هاتفك للبدء (مثال: 055XXXXXXX):"
         )
 
 # ============================================================
@@ -1317,7 +1317,7 @@ def handle_message(sender_id, text):
         "تشغيل", "ابدا", "ابدء", "سجلني", "تسجيل",
         "sejalni", "sejelni", "sajalni", "sajelni",
         "sejjelni", "sejjalni", "sajjelni", "sajjalni",
-        "مرحبًا 👋", "مرحبًا، sejjalni!", "مرحبًا Sejjalni!"
+        "مرحبًا 👋", "مرحبًا، sejjalni!"
     ]:
         start_login(sender_id)
         return
